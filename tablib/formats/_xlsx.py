@@ -14,14 +14,14 @@ else:
 from tablib.compat import openpyxl
 
 Workbook = openpyxl.workbook.Workbook
-ExcelWriter = openpyxl.writer.excel.ExcelWriter
+#ExcelWriter = openpyxl.writer.excel.ExcelWriter
 get_column_letter = openpyxl.cell.get_column_letter
 
 from tablib.compat import unicode
 
 
 title = 'xlsx'
-extensions = ('xlsx',)
+extentions = ('xlsx',)
 
 def export_set(dataset):
     """Returns XLSX representation of Dataset."""
@@ -41,7 +41,8 @@ def export_book(databook):
     """Returns XLSX representation of DataBook."""
 
     wb = Workbook()
-    ew = ExcelWriter(workbook = wb)
+    wb.remove_sheet(wb.worksheets[0]) #####
+    #ew = ExcelWriter(workbook = wb)
     for i, dset in enumerate(databook._datasets):
         ws = wb.create_sheet()
         ws.title = dset.title if dset.title else 'Sheet%s' % (i)
@@ -50,13 +51,15 @@ def export_book(databook):
 
 
     stream = BytesIO()
-    ew.save(stream)
+    wb.save(stream)
     return stream.getvalue()
 
 
 def dset_sheet(dataset, ws):
     """Completes given worksheet from given Dataset."""
     _package = dataset._package(dicts=False)
+
+    #ws.auto_filter = 'A1:%s1' % get_column_letter(len(_package[0]))
 
     for i, sep in enumerate(dataset._separators):
         _offset = i
@@ -67,6 +70,7 @@ def dset_sheet(dataset, ws):
         for j, col in enumerate(row):
             col_idx = get_column_letter(j + 1)
 
+
             # bold headers
             if (row_number == 1) and dataset.headers:
                 # ws.cell('%s%s'%(col_idx, row_number)).value = unicode(
@@ -74,7 +78,8 @@ def dset_sheet(dataset, ws):
                 ws.cell('%s%s'%(col_idx, row_number)).value = unicode(col)
                 style = ws.get_style('%s%s' % (col_idx, row_number))
                 style.font.bold = True
-                ws.freeze_panes = '%s%s' % (col_idx, row_number)
+                ws.freeze_panes = 'A2' #'%s%s' % (col_idx, row_number)
+                #ws.column_dimensions[col_idx].width = 18
 
 
             # bold separators
@@ -97,5 +102,8 @@ def dset_sheet(dataset, ws):
                             '%s' % col, errors='ignore')
                 except TypeError:
                     ws.cell('%s%s'%(col_idx, row_number)).value = unicode(col)
+
+
+
 
 
